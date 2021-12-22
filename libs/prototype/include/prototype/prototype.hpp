@@ -1,102 +1,95 @@
-// Copyright 2021 chrislu
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 #include <iostream>
 #include <string>
 #include <unordered_map>
 
-class CatPrototype {
+using namespace std;
+class RobotPrototype {
 public:
-    CatPrototype(){};
-    CatPrototype(std::string _feed, std::string _colorhex)
-        : feed(_feed), colorhex(_colorhex) {}
+    RobotPrototype(string product_name, string material,
+                   string gender, string color)
+        : product_name(product_name), material(material),
+          gender(gender), color(color) {}
+    virtual RobotPrototype *Clone() const = 0;   // * need to implement !
+    virtual ~RobotPrototype(){};
 
-    void SayMeow() {
-        std::cout << "[" << this->name << "]: meow" << std::endl;
-    }
-    void SetName(std::string _name) {
-        this->name = _name;
-    }
-    void SetFeed(std::string _feed) {
-        this->feed = _feed;
-    }
-    void SetColor(std::string _colorhex) {
-        this->colorhex = _colorhex;
-    }
+    void         SetProductName(string product_name) { this->product_name = product_name; }
+    void         SetMaterial(string material) { this->material = material; }
+    void         SetGender(string gender) { this->gender = gender; }
+    void         SetColor(string color) { this->color = color; }
+    virtual void Print() = 0;
 
-    virtual ~CatPrototype(){};
-    virtual CatPrototype *Clone() const = 0;
+    friend ostream &operator<<(ostream &os, const RobotPrototype &robot);
 
 private:
-    std::string name;
-    std::string feed;
-    std::string colorhex;
+    string product_name;
+    string material;
+    string gender;
+    string color;
 };
 
-class BlackCat : public CatPrototype {
+class MetalRobot : public RobotPrototype {
 public:
-    BlackCat(std::string _feed, std::string _colorhex)
-        : CatPrototype(_feed, _colorhex) {}
+    MetalRobot(string product_name, string material,
+               string gender, string color, int lifetime)
+        : RobotPrototype(product_name, material, gender, color),
+          lifetime(lifetime) {}
 
-    ~BlackCat() override {}
-
-    CatPrototype *Clone() const override {
-        return new BlackCat(*this);
-    }
-};
-
-class SiameseCat : public CatPrototype {
-public:
-    SiameseCat(std::string _feed, std::string _colorhex)
-        : CatPrototype(_feed, _colorhex) {}
-
-    ~SiameseCat() override {}
-
-    CatPrototype *Clone() const override {
-        return new SiameseCat(*this);
-    }
-};
-
-class SnowshoeCat : public CatPrototype {
-public:
-    SnowshoeCat(std::string _feed, std::string _colorhex)
-        : CatPrototype(_feed, _colorhex) {}
-
-    ~SnowshoeCat() override {}
-
-    CatPrototype *Clone() const override {
-        return new SnowshoeCat(*this);
-    }
-};
-
-class CatHouse {
-public:
-    CatHouse() {
-        cat_map["blackcat"]    = new BlackCat("xisha", "black");
-        cat_map["siamesecat"]  = new SiameseCat("farmina", "orange");
-        cat_map["snowshoecat"] = new SnowshoeCat("nourish", "white");
+    ~MetalRobot() override {}
+    RobotPrototype *Clone() const override {
+        return new MetalRobot(*this);
     }
 
-    ~CatHouse() {
-        delete cat_map["blackcat"];
-        delete cat_map["siamesecat"];
-        delete cat_map["snowshoecat"];
-    }
-
-    CatPrototype *GetNewCat(std::string name) {
-        return cat_map[name]->Clone();
+    void Print() override {
+        cout << *this << "lifetime: " << this->lifetime << endl;
     }
 
 private:
-    std::unordered_map<std::string, CatPrototype *> cat_map;
+    int lifetime;
 };
+
+class WoodRobot : public RobotPrototype {
+public:
+    WoodRobot(string product_name, string material, string gender,
+              string color, string wood_type)
+        : RobotPrototype(product_name, material, gender, color),
+          wood_type(wood_type) {}
+
+    ~WoodRobot() override {}
+    RobotPrototype *Clone() const override {
+        return new WoodRobot(*this);
+    }
+
+    void Print() override {
+        cout << *this << "wood_type " << this->wood_type << endl;
+    }
+
+private:
+    string wood_type;
+};
+
+class RobotFactory {
+public:
+    RobotFactory() {
+        robot_map["Gundam"]    = new MetalRobot("Gundam", "iron", "male", "white", 5);
+        robot_map["Pinocchio"] = new WoodRobot("Pinocchio", "wood", "male", "brown", "fir");
+    }
+
+    ~RobotFactory() {
+        delete robot_map["Gundam"];
+        delete robot_map["Pinocchio"];
+    }
+
+    RobotPrototype *GetNewRobot(string name) {
+        return robot_map[name]->Clone();
+    }
+
+private:
+    unordered_map<string, RobotPrototype *> robot_map;
+};
+
+ostream &operator<<(ostream &os, const RobotPrototype &robot) {
+    return os << "product_name: " << robot.product_name << endl
+              << "material: " << robot.material << endl
+              << "gender: " << robot.gender << endl
+              << "color: " << robot.color << endl;
+}
